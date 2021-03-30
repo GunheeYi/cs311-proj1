@@ -1,9 +1,9 @@
 CC=gcc
 
-default: runfile
+default: runfile.o runfile test
 
-runfile.o: main.c 
-	$(CC) -c main.c -std=c99 -o runfile.o
+runfile.o: main.cpp
+	$(CC) -c main.cpp -std=c++17 -o runfile.o
  
 runfile: runfile.o
 	$(CC) runfile.o  -o runfile
