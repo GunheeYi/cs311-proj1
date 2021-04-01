@@ -7,15 +7,30 @@
 #include <cstdio>
 #include <vector>
 #include <bitset>
+#include <cmath>
 
 using namespace std;
+
+string toBinString(long i, size_t length) {
+	return bitset<32>(i).to_string().substr(32-length, length);
+}
+
+string makeImmediate(short i) {
+    bool negative = false;
+    if(i<0) {
+        negative = true;
+        i += (short) pow(2,15);
+    }
+    string s = toBinString(i, 15);
+    return (negative ? "1" : "0") + s;
+}
 
 int stringToInt(string s) {
     if(s.length() >=3 && s.substr(0,2)=="0x") return stoi(s.substr(2,s.length()-2), 0, 16);
     return stoi(s);
 }
 
-long getAdd(vector<pair<string, unsigned int> > syms, string s) {
+int makeOffsetAndAdd(vector<pair<string, unsigned int> > syms, string s) {
 	int offset = 0;
 	int opening = s.find("(");
 	int closing = s.find(")");
@@ -31,8 +46,8 @@ long getAdd(vector<pair<string, unsigned int> > syms, string s) {
 
 int main() {
 
-    vector<pair<string, unsigned int> > syms;
-    syms.push_back(make_pair("asdf", 0xf));
-    std::cout << getAdd(syms, "-4(-24)");
+    // vector<pair<string, unsigned int> > syms;
+    // syms.push_back(make_pair("asdf", 0xf));
+    std::cout << makeImmediate(-3);
     return 0;
 }
