@@ -3,12 +3,12 @@ CC=gcc
 default: runfile.o runfile test
 
 runfile.o: main.cpp
-	$(CC) -c main.cpp -std=c++17 -o runfile.o
+	g++ -c main.cpp -std=c++17 -o runfile.o
  
 runfile: runfile.o
-	$(CC) runfile.o  -o runfile
+	g++ runfile.o  -o runfile
 
-test: default test_1 test_2 test_3 test_4 test_5 
+test: test_1 test_2 test_3 test_4 test_5 
 
 test_1:
 	@echo "Testing example01"; \

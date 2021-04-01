@@ -4,8 +4,109 @@
 #include <stdio.h>
 #include <cstdio>
 #include <vector>
+#include <bitset>
 
 using namespace std;
+
+string toBinString(unsigned int i, size_t length) {
+	return bitset<32>(i).to_string().substr(32-length, length);
+}
+
+class InstWithAdds {
+	public:
+		string name;
+		vector<unsigned int> adds;
+
+		InstWithAdds(string name, vector<unsigned int> adds) {
+			this->name = name;
+			this->adds = adds;
+		}
+};
+
+class Mold {
+	public:
+		std::string name, type, opcode, funct;
+		
+		Mold(std::string name, std::string type, unsigned int opcode, unsigned int funct) {
+			this->name = name;
+			this->type = type;
+			this->opcode = toBinString(opcode, 6);
+			if(this->type=="R") this->funct = toBinString(funct, 6);
+		}
+};
+
+class MoldSet {
+	public:
+		std::vector<Mold> set;
+		
+		MoldSet() {
+			set.push_back(Mold("addiu", "I", 0x9, 0x0));
+			set.push_back(Mold("addu", "R", 0x0, 0x21));
+			set.push_back(Mold("and", "R", 0x0, 0x24));
+			set.push_back(Mold("andi", "I", 0xc, 0x0));
+			set.push_back(Mold("beq", "I", 0x4, 0x0));
+			set.push_back(Mold("bne", "I", 0x5, 0x0));
+			set.push_back(Mold("j", "J", 0x2, 0x0));
+			set.push_back(Mold("jal", "J", 0x3, 0x0));
+			set.push_back(Mold("jr", "R", 0x0, 0x08));
+			set.push_back(Mold("lui", "I", 0xf, 0x0));
+			set.push_back(Mold("lw", "I", 0x23, 0x0));
+			set.push_back(Mold("nor", "R", 0x0, 0x27));
+			set.push_back(Mold("or", "R", 0x0, 0x25));
+			set.push_back(Mold("ori", "I", 0xd, 0x0));
+			set.push_back(Mold("sltiu", "I", 0xb, 0x0));
+			set.push_back(Mold("sltu", "R", 0x0, 0x2b));
+			set.push_back(Mold("sll", "R", 0x0, 0x00));
+			set.push_back(Mold("srl", "R", 0x0, 0x02));
+			set.push_back(Mold("sw", "I", 0x2b, 0x0));
+			set.push_back(Mold("subu", "R", 0x0, 0x23));
+		}
+	
+		string make(InstWithAdds inst) {
+			if(inst.name=="la") {
+				unsigned int regAdd = inst.adds[0];
+				unsigned int memAdd = inst.adds[1];
+				string wholeAddStr = toBinString(memAdd, 8);
+				string lowerAddStr = wholeAddStr.substr(4,4);
+				if(lowerAddStr=="0000") {
+					return make(InstWithAdds("lui", vector<unsigned int>{regAdd, memAdd >> 16}));
+				} else {
+					return make(InstWithAdds("lui", vector<unsigned int>{regAdd, memAdd >> 16})) + make(InstWithAdds("ori", vector<unsigned int>{regAdd, memAdd << 16 >> 16}));
+				}
+			}
+
+			Mold m("null", "null", 0, 0);
+			for (auto i = set.begin(); i < set.end(); i++) {
+				if(inst.name==i->name) m = *i;
+			}
+
+			if (m.type=="R") {
+				return m.opcode + toBinString(inst.adds[0], 5);
+			}
+			return m.name + m.type;
+		}
+};
+
+string symToBin(std::string s) {
+	if (s[0]=='$') cout << "Register" << endl;
+	else cout << "Others" << endl;
+
+	return "";
+}
+
+unsigned int getAdd(vector<pair<string, unsigned int> > syms, string s) {
+	unsigned int offset = 0;
+	unsigned int opening = s.find("(");
+	unsigned int closing = s.find(")");
+	if (opening < s.length()) {
+		offset = stoi(s.substr(0,opening));
+		s = s.substr(opening+1, closing-opening-1);
+	}
+	for(auto i = syms.begin(); i < syms.end(); i++) {
+		if (i->first==s) return i->second + offset;
+	}
+	return stoi(s)+offset;
+}
 
 int main(int argc, char* argv[]){
 
@@ -35,58 +136,105 @@ int main(int argc, char* argv[]){
 		}
 
 		//From now on, if you want to read string from input file, you can just use scanf function.
-
-		vector<pair<string, int>> syms;
-		for(int i = 0; i < 32; i++){
-			if (i==0) {
-				syms.push_back(make_pair("$zero", i));
-			} else if (i==1) {
-				syms.push_back(make_pair("$at", i));
-			} else if (i==28) {
-				syms.push_back(make_pair("$gp", i));
-			} else if (i==29) {
-				syms.push_back(make_pair("$sp", i));
-			} else if (i==30) {
-				syms.push_back(make_pair("$fp", i));
-			} else if (i==31) {
-				syms.push_back(make_pair("$ra", i));
-			} else if (i >= 2 && i <= 3) {
-				syms.push_back(make_pair("$v"+to_string(i-2), i));
-			} else if (i >= 4 && i <= 7) {
-				syms.push_back(make_pair("$a"+to_string(i-4), i));
-			} else if (i >= 8 && i <= 15) {
-				syms.push_back(make_pair("$t"+to_string(i-8), i));
-			} else if (i >= 16 && i <= 23) {
-				syms.push_back(make_pair("$s"+to_string(i-16), i));
-			} else if (i >= 24 && i <= 25) {
-				syms.push_back(make_pair("$t"+to_string(i-16), i));
-			} else if (i >= 26 && i <= 27) {
-				syms.push_back(make_pair("$k"+to_string(i-26), i));
-			}
-		}
-
 		// for (std::vector<pair<string, int>>::const_iterator i = syms.begin(); i != syms.end(); ++i) std::cout << i->first << " " << i->second << std::endl;
 
-		vector<vector<string>> vv;
+		vector<vector<string> > vv;
 
+		int i = 0;
 		char *a = (char*) malloc(1000);
-		gets(a);
-		gets(a);
-		int j = 0;
-		while(*(a+j)) {
-			if (*(a+j)=='	') {
-				printf("%s", "asdf");
-			} else {
-				printf("%c", *(a+j));
+		while(gets(a)) {
+			vector<string> v;
+			string s = "";
+			for (int j = 0; j < strlen(a); j++) {
+				if(*(a+j)=='	' || *(a+j)==' ' || *(a+j)==',') {
+					if(!s.empty()) { 
+						v.push_back(s);
+						s = "";
+					}
+					if(*(a+j)==0) break;
+				} else {
+					s += *(a+j);
+				}
 			}
-			j++;
+			if(!s.empty()) v.push_back(s);
+			vv.push_back(v);
+			i++;
+			//a = (char*) malloc(1000);
 		}
 		
-		std::string s = "0xfffefffe";
-		unsigned int x = std::stoul(s, nullptr, 16);
-		
-		
+		// // vector print test
+		// for (auto ii = vv.begin(); ii < vv.end(); ii++) {
+		// 	for (auto i = ii->begin(); i < ii->end(); i++)
+		// 	{
+		// 		cout << *i << " ";
+		// 	}
+		// 	cout << endl;
+		// }
 
+		string data = "";
+		string text = "";
+
+		vector<pair<string, unsigned int> > syms;
+		for(unsigned int i = 0; i < 32; i++) {
+			syms.push_back(make_pair("$"+to_string(i), i));
+		}
+
+		vector<vector<string> > instsWithSyms;
+		unsigned int dataCounter = 0x10000000;
+		unsigned int textCounter = 0x400000;
+		string reading = "";
+		for(auto ii = vv.begin(); ii < vv.end(); ii++) {
+			vector<string> line = *ii;
+			if(line[0]==".data") {
+				reading = "data";
+				continue;
+			} else if(line[0]==".text") {
+				reading = "text";
+				continue;
+			}
+			if(reading=="data") {
+				if(line.size()==3) syms.push_back(make_pair(line[0], dataCounter));
+				dataCounter += 4;
+				continue;
+			} else if(reading=="text") {
+				if(line.size()==1) {
+					syms.push_back(make_pair(line[0], textCounter));
+					continue;
+				}
+
+				instsWithSyms.push_back(line);
+				textCounter += 4;
+			}
+		}
+
+		vector<InstWithAdds> instsWithAdds;
+		for(auto i = instsWithSyms.begin(); i < instsWithSyms.end(); i++) {
+			vector<string> line = *i;
+			InstWithAdds inst("", vector<unsigned int>{});
+			inst.name = line[0];
+			for(auto j = line.begin()+1; j < line.end(); j++) {
+				inst.adds.push_back(getAdd(syms, *j));
+			}
+		}
+
+		// for (auto i = syms.begin(); i < syms.end(); i++)
+		// {
+		// 	cout << i->first << "	" << toBinString(i->second, 32) << endl;
+		// }
+
+		MoldSet ms;
+		for (auto i = instructions.begin(); i < instructions.end(); i++)
+		{
+			cout << ms.make(*i) << endl;
+		}
+
+		
+		
+		// std::string s = "0xfffefffe";
+		// unsigned int x = std::stoul(s, nullptr, 16);
+
+		// symToBin("$21");
+		// symToBin("asdf");
 
 		// For output file write 
 		// You can see your code's output in the sample_input/example#.o 
