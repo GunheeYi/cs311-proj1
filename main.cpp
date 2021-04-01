@@ -119,15 +119,15 @@ class MoldSet {
 			} else if (m.name=="beq") {
 				rs = toBinString(symToInt(inst[1]), 5);
 				rt = toBinString(symToInt(inst[2]), 5);
-				imm = toBinString((symToInt(inst[3])-textCounter)/4, 16);
+				imm = toBinString((symToInt(inst[3])-textCounter)/4-1, 16);
 			} else if (m.name=="bne") {
 				rs = toBinString(symToInt(inst[1]), 5);
 				rt = toBinString(symToInt(inst[2]), 5);
-				imm = toBinString((symToInt(inst[3])-textCounter)/4, 16);
+				imm = toBinString((symToInt(inst[3])-textCounter)/4-1, 16);
 			} else if (m.name=="j") {
-				add = toBinString(symToInt(inst[1]), 26);
+				add = toBinString(symToInt(inst[1])/4, 26);
 			} else if (m.name=="jal") {
-				add = toBinString(symToInt(inst[1]), 26);
+				add = toBinString(symToInt(inst[1])/4, 26);
 			} else if (m.name=="jr") {
 				rs = toBinString(symToInt(inst[1]), 5);
 			} else if (m.name=="lui") {
@@ -282,16 +282,29 @@ int main(int argc, char* argv[]){
 					continue;
 				}
 				if(!line.empty()) {
-					insts.push_back(line);
+					if (line[0]=="la") {
+						long memInt = symToInt(line[2]);
+						// string wholeAddStr = toBinString(memInt, 32);
+						// string lowerAddStr = wholeAddStr.substr(16,16);
+						vector<string> upper{"lui", line[1], to_string(memInt/0x10000)};
+						insts.push_back(upper);
+						if(memInt%0x10000!=0) {
+							textCounter += 4;
+							vector<string> lower{"ori", line[1], line[1], to_string(memInt%0x10000)};
+							insts.push_back(lower);
+						}
+					} else {
+						insts.push_back(line);
+					}
 					textCounter += 4;
 				}
 			}
 		}
 
-		for (auto i = syms.begin(); i < syms.end(); i++)
-		{
-			cout << i->first << " " << i->second << endl;
-		}
+		// for (auto i = syms.begin(); i < syms.end(); i++)
+		// {
+		// 	cout << i->first << " " << i->second << endl;
+		// }
 
 		vector<vector<string> > newInsts;
 
@@ -312,21 +325,22 @@ int main(int argc, char* argv[]){
 			}
 		}
 
-		// vector print test
-		for (auto ii = newInsts.begin(); ii < newInsts.end(); ii++) {
-			for (auto i = ii->begin(); i < ii->end(); i++)
-			{
-				cout << *i << " ";
-			}
-			cout << endl;
-		}
+		// // vector print test
+		// for (auto ii = newInsts.begin(); ii < newInsts.end(); ii++) {
+		// 	for (auto i = ii->begin(); i < ii->end(); i++)
+		// 	{
+		// 		cout << *i << " ";
+		// 	}
+		// 	cout << endl;
+		// }
 		
 		MoldSet ms;
 		textCounter = 0x400000;
-		for(auto i = insts.begin(); i < insts.end(); i++) {
+		for(auto i = newInsts.begin(); i < newInsts.end(); i++) {
 			string lineTranslated =  ms.make(*i, textCounter);
 			text += lineTranslated;
-			cout << lineTranslated << " " << vToS(*i) << endl;
+			// cout << lineTranslated << " " << vToS(*i) << endl;
+			// cout << lineTranslated << endl;
 			textCounter += 4;
 		}
 
@@ -334,7 +348,7 @@ int main(int argc, char* argv[]){
 		long dataSize = data.length() / 8;
 
 		string full = toBinString(textSize, 32) + toBinString(dataSize,32) + text + data;
-		cout << full << endl;;
+		// cout << full << endl;;
 		
 
 		// For output file write 
