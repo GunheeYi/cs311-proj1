@@ -3,10 +3,10 @@ CC=gcc
 default: runfile.o runfile
 
 runfile.o: main.cpp
-	g++ -c main.cpp -std=c++17 -o runfile.o
+	g++ -c main.cpp -std=c++17 -o runfile.o -w
  
 runfile: runfile.o
-	g++ runfile.o  -o runfile
+	g++ runfile.o  -o runfile -w
 
 test: default test_1 test_2 test_3 test_4 test_5 
 

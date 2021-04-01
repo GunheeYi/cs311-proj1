@@ -188,6 +188,20 @@ class MoldSet {
 		}
 };
 
+char * getsNew(char *s, size_t size) {
+  char *r;
+  int len;
+
+  r = fgets(s, size, stdin);
+  if (!r)
+    return r;
+
+  len = strlen(s);
+  if (s[len - 1] == '\n') s[len - 1] = '\0'; //replace new line with null
+
+  return s;
+}
+
 int main(int argc, char* argv[]){
 
 	if(argc != 2){
@@ -222,7 +236,7 @@ int main(int argc, char* argv[]){
 
 		int i = 0;
 		char *a = (char*) malloc(1000);
-		while(gets(a)) {
+		while(getsNew(a, 1000)) {
 			vector<string> v;
 			string s = "";
 			for (int j = 0; j < strlen(a); j++) {
