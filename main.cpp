@@ -9,15 +9,6 @@
 
 using namespace std;
 
-string vToS(vector<string> v) {
-	string s = "";
-	for(auto i = v.begin(); i < v.end(); i++) {
-		s += *i;
-		s+= " ";
-	}
-	return s;
-}
-
 vector<pair<string, unsigned int> > syms;
 
 long stringToInt(string s) {
@@ -92,7 +83,6 @@ class MoldSet {
 	
 		string make(vector<string> inst, unsigned int textCounter) {
 			
-
 			Mold m("null", "null", 0, 0);
 			for (auto i = set.begin(); i < set.end(); i++) {
 				if(inst[0]==i->name) m = *i;
@@ -253,17 +243,7 @@ int main(int argc, char* argv[]){
 			if(!s.empty()) v.push_back(s);
 			vv.push_back(v);
 			i++;
-			//a = (char*) malloc(1000);
 		}
-		
-		// // vector print test
-		// for (auto ii = vv.begin(); ii < vv.end(); ii++) {
-		// 	for (auto i = ii->begin(); i < ii->end(); i++)
-		// 	{
-		// 		cout << *i << " ";
-		// 	}
-		// 	cout << endl;
-		// }
 
 		string data = "";
 		string text = "";
@@ -314,47 +294,12 @@ int main(int argc, char* argv[]){
 				}
 			}
 		}
-
-		// for (auto i = syms.begin(); i < syms.end(); i++)
-		// {
-		// 	cout << i->first << " " << i->second << endl;
-		// }
-
-		vector<vector<string> > newInsts;
-
-		for(auto i = insts.begin(); i < insts.end(); i++) {
-			vector<string> inst = *i;
-			if(inst[0]=="la") {
-				long memInt = symToInt(inst[2]);
-				// string wholeAddStr = toBinString(memInt, 32);
-				// string lowerAddStr = wholeAddStr.substr(16,16);
-				vector<string> upper{"lui", inst[1], to_string(memInt/0x10000)};
-				newInsts.push_back(upper);
-				if(memInt%0x10000!=0) {
-					vector<string> lower{"ori", inst[1], inst[1], to_string(memInt%0x10000)};
-					newInsts.push_back(lower);
-				}
-			} else {
-				newInsts.push_back(inst);
-			}
-		}
-
-		// // vector print test
-		// for (auto ii = newInsts.begin(); ii < newInsts.end(); ii++) {
-		// 	for (auto i = ii->begin(); i < ii->end(); i++)
-		// 	{
-		// 		cout << *i << " ";
-		// 	}
-		// 	cout << endl;
-		// }
 		
 		MoldSet ms;
 		textCounter = 0x400000;
-		for(auto i = newInsts.begin(); i < newInsts.end(); i++) {
+		for(auto i = insts.begin(); i < insts.end(); i++) {
 			string lineTranslated =  ms.make(*i, textCounter);
 			text += lineTranslated;
-			// cout << lineTranslated << " " << vToS(*i) << endl;
-			// cout << lineTranslated << endl;
 			textCounter += 4;
 		}
 
@@ -362,13 +307,7 @@ int main(int argc, char* argv[]){
 		long dataSize = data.length() / 8;
 
 		string full = toBinString(textSize, 32) + toBinString(dataSize,32) + text + data;
-		// cout << full << endl;;
 		
-
-		// For output file write 
-		// You can see your code's output in the sample_input/example#.o 
-		// So you can check what is the difference between your output and the answer directly if you see that file
-		// make test command will compare your output with the answer
 		file[strlen(file)-1] ='o';
 		freopen(file,"w",stdout);
 

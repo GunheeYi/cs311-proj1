@@ -1,12 +1,10 @@
-CC=gcc
-
-default: runfile.o runfile
+default: runfile
 
 runfile.o: main.cpp
-	g++ -c main.cpp -std=c++17 -o runfile.o -w
+	g++ -c main.cpp -std=c++11 -o runfile.o
  
 runfile: runfile.o
-	g++ runfile.o  -o runfile -w
+	g++ runfile.o -o runfile
 
 test: default test_1 test_2 test_3 test_4 test_5 
 
