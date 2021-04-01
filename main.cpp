@@ -273,6 +273,7 @@ int main(int argc, char* argv[]){
 			}
 			if(reading=="data") {
 				if(line.size()==3) syms.push_back(make_pair(line[0].substr(0, line[0].length()-1), dataCounter));
+				data += toBinString(stringToInt(line[line.size()-1]), 32);
 				dataCounter += 4;
 				continue;
 			} else if(reading=="text") {
@@ -329,6 +330,13 @@ int main(int argc, char* argv[]){
 			textCounter += 4;
 		}
 
+		long textSize = text.length() / 8;
+		long dataSize = data.length() / 8;
+
+		string full = toBinString(textSize, 32) + toBinString(dataSize,32) + text + data;
+		cout << full << endl;;
+		
+
 		// For output file write 
 		// You can see your code's output in the sample_input/example#.o 
 		// So you can check what is the difference between your output and the answer directly if you see that file
@@ -338,7 +346,7 @@ int main(int argc, char* argv[]){
 
 		//If you use printf from now on, the result will be written to the output file.
 
-		printf("Hello World!\n"); 
+		printf("%s", full.c_str()); 
 		
 
 	}
